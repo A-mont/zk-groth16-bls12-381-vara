@@ -1,19 +1,46 @@
 # Prove You Know a Secret: ZK on Vara
 
-Zero-knowledge: **prove you know a secret `w` such that
-`Poseidon(w) == h`, without revealing `w`** — and verify the proof **on Vara
-Network**, inside a Sails actor that offloads the BLS12-381 pairings to the
-runtime **builtin actor**.
+A complete, end-to-end **Groth16 zk-SNARK over BLS12-381**, verified **on-chain on
+Vara Network**. The system proves knowledge of a secret preimage without ever
+revealing it, and settles that proof inside a Wasm `sails-rs` actor.
 
-The proof is **Groth16 over BLS12-381**, generated off-chain with
-[arkworks](https://arkworks.rs); the on-chain verifier follows the working
-pattern of `gear-foundation/zk-mental-poker`.
+**The relation.** For a fixed public input `x = h`, the prover demonstrates
+knowledge of a private witness `w` satisfying `R(x, w) : Poseidon(w) == h` —
+*"I know a `w` that hashes to this `h`"* — disclosing nothing about `w` beyond the
+truth of that statement. Poseidon is the hash of choice because it is
+arithmetisation-friendly: the full preimage relation compiles to ~**238** R1CS
+constraints over the BLS12-381 scalar field `Fr` (a SHA-256 preimage would be tens
+of thousands).
+
+**Off-chain.** An [arkworks](https://arkworks.rs) 0.5 prover runs the Groth16
+trusted setup (producing the proving/verifying keys) and emits a constant-size
+proof `π = (A, B, C)` — ~**192** bytes regardless of circuit size. The witness `w`
+is consumed entirely inside the prover process and is absent from every emitted
+artifact, log, and payload.
+
+**On-chain.** The verifier is a `no_std` `sails-rs` actor compiled to
+`wasm32v1-none`. It carries an embedded **prepared verifying key** — the precomputed
+`e(α, β)`, the negated `-γ` and `-δ` in G2, and the `IC` bases — and checks the
+Groth16 pairing identity
+
+```
+e(A, B) · e(L, −γ) · e(C, −δ) == e(α, β),    L = ic₀ + h·ic₁
+```
+
+It runs **no trusted setup, no circuit re-synthesis, and never sees `w`**; it only
+evaluates the equation above against the public `h`. The three expensive
+elliptic-curve operations — the multi-scalar multiplication that folds the public
+inputs into `L`, the multi-Miller loop, and the final exponentiation — are **not
+implemented in Wasm**. They are **offloaded to the Vara runtime's BLS12-381 builtin
+actor** through `gbuiltin-bls381`, so verification reuses the node's native, audited
+pairing code instead of shipping a curve implementation in the contract. The on-chain
+arkworks line is 0.4 (the builtin's); the wire format uses raw
+`serialize_uncompressed` encodings, which are byte-identical across the 0.4/0.5
+boundary — proven on testnet.
 
 > **Live on Vara testnet** — program
 > `0x8d84679b79b6eae0f76f18cd8e1045b7c3482725c47f27b73ecd8f5f32d502eb`.
 > A `Verify` call returned `{ ok: true }` at block 28449815.
-
----
 
 ## Table of contents
 
@@ -33,12 +60,10 @@ pattern of `gear-foundation/zk-mental-poker`.
 - [Command cheat-sheet](#command-cheat-sheet)
 - [Security notes](#security-notes)
 
----
-
 ## Layout
 
 ```
-zk-secret-vara/
+zk-groth16-bls12-381-vara/
 ├─ observability/telemetry/   shared tracing + StepReport + JSONL run-log writer
 ├─ crates/
 │  ├─ circuit/                Step 2 — Poseidon(w)==h as R1CS (arkworks 0.5)
@@ -58,8 +83,6 @@ because a shared workspace makes Cargo unify features and enable `gstd` + `gtest
 on `sails-rs` simultaneously, breaking the Wasm build (vara-skills `sails-new-app`
 guardrail).
 
----
-
 ## Pinned versions
 
 | Area | Crate / tool | Version | Notes |
@@ -69,8 +92,6 @@ guardrail).
 | On-chain ark | via `gbuiltin-bls381` re-exports | **0.4** | uncompressed encodings are byte-compatible with 0.5 |
 | Program framework | `sails-rs`, `gstd` | **0.10.x / 1.10** | async service, events, generated client |
 | Toolchain | rustc | **1.91**, target `wasm32v1-none` | build in WSL |
-
----
 
 ## The five components
 
@@ -88,8 +109,6 @@ loop + final exponentiation all offloaded to the builtin:
 ```
 e(A, B) · e(L, −γ) · e(C, −δ) == e(α, β),   L = ic₀ + h·ic₁
 ```
-
----
 
 ## Quick start — see it working (no Rust)
 
@@ -115,8 +134,6 @@ Toggle *“Corrupt one byte”* to watch it get rejected.
 
 > No TVARA? Get testnet tokens: `vara-wallet --network testnet faucet <address>`.
 
----
-
 ## Walkthrough — build it end to end
 
 This is the full pipeline reproduced from scratch: circuit → setup → proof →
@@ -136,7 +153,7 @@ Export these in your WSL shell so **every** stage writes to the **same** run-log
 the closing `make report` then prints the whole pipeline as a single table.
 
 ```bash
-cd /mnt/c/path/to/zk-secret-vara     # the repo checkout, as seen from WSL
+cd /mnt/c/path/to/zk-groth16-bls12-381-vara   # the repo checkout, as seen from WSL
 source ~/.cargo/env
 export LOG_FORMAT=pretty                 # human-readable output (this is the default)
 export RUST_LOG=info
@@ -322,8 +339,6 @@ npm run dev                       # → http://localhost:3000
   with `trace_id`, message id, block, and latency
 - the *“Corrupt one byte”* toggle → the actor **rejects** it
 
----
-
 ## Command cheat-sheet
 
 A `Makefile` wraps the whole pipeline:
@@ -344,11 +359,8 @@ make report      # closeout — run-log summary table
 make frontend    # Step 8  — UI at localhost:3000
 ```
 
-Fine-grained details (encodings, the no_std/serde traps, WSL gotchas) live in
-`CLAUDE.md`; the full signal catalog in `OBSERVABILITY.md`; the UI in
+The full signal catalog lives in `OBSERVABILITY.md`; the UI in
 `frontend/README.md`.
-
----
 
 ## Security notes
 

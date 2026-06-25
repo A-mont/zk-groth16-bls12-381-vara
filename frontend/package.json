@@ -1,5 +1,5 @@
 {
-  "name": "zk-secret-vara",
+  "name": "zk-groth16-bls12-381-vara",
   "private": true,
   "version": "0.1.0",
   "license": "MIT-0",
