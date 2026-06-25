@@ -369,3 +369,30 @@ The full signal catalog lives in `OBSERVABILITY.md`; the UI in
   ceremony).
 - This proves **knowledge of a preimage only**, not a full application.
 - The witness `w` never appears in any artifact, log, or on-chain payload.
+
+## Contributing
+
+Contributions are welcome. Please follow these rules:
+
+1. **Open an issue first** for anything beyond a trivial fix, so the approach can
+   be discussed before you write code.
+2. **Branch from `main`** and use a descriptive name (`feat/…`, `fix/…`,
+   `docs/…`). Don't commit directly to `main`.
+3. **Build in WSL** with Rust **1.91** and the `wasm32v1-none` target — never run
+   `cargo` from PowerShell directly.
+4. **Keep the two workspaces isolated.** Off-chain crates and the on-chain
+   `crates/verifier-app` workspace must stay separate (see *Why two workspaces*).
+   Never merge them or add `ark` crates directly to the on-chain `app`.
+5. **Run the checks before opening a PR:**
+   ```bash
+   cargo test --workspace                       # off-chain
+   cd crates/verifier-app && cargo test --release   # on-chain gtest
+   cd frontend && npm run build                  # frontend
+   ```
+   All three must pass; CI runs the same on every push and PR.
+6. **Pin versions deliberately.** If you bump a dependency, update the
+   *Pinned versions* table and explain why in the PR.
+7. **Never leak the witness.** Any change to the prover must keep `w` out of every
+   artifact, log, and payload — `bash artifacts/check-no-leak.sh` must still pass.
+8. **Write a clear PR description**: what changed, why, and how you verified it.
+   Keep commits focused and messages in the imperative mood.
