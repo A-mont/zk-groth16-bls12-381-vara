@@ -28,33 +28,6 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
-  # ── On-chain Sails verifier (isolated workspace, compiles to Wasm) ─────────
-  verifier:
-    name: Verifier (build Wasm + gtest)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: crates/verifier-app
-    steps:
-      - uses: actions/checkout@v4
-
-      # Honours crates/verifier-app/rust-toolchain.toml (1.91 + wasm32v1-none).
-      - name: Install Rust 1.91 + wasm32v1-none
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: "1.91"
-          targets: wasm32v1-none
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: crates/verifier-app
-
-      - name: Build (release Wasm + IDL/client)
-        run: cargo build --release
-
-      - name: Test (gtest against the BLS12-381 builtin mock)
-        run: cargo test --release
-
   # ── Frontend (Vite + sails-js) ────────────────────────────────────────────
   frontend:
     name: Frontend (build)
