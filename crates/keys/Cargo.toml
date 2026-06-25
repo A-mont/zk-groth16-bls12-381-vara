@@ -1,0 +1,32 @@
+[package]
+name = "zk-keys"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Step 2 — Groth16 trusted setup: produces pk.bin / vk.bin and the vk fingerprint."
+
+[[bin]]
+name = "zk-keys"
+path = "src/main.rs"
+
+[dependencies]
+zk-circuit.workspace = true
+zk-telemetry.workspace = true
+
+ark-groth16.workspace = true
+ark-bls12-381.workspace = true
+ark-ec = { workspace = true, features = ["std"] }
+ark-snark.workspace = true
+ark-serialize = { workspace = true, features = ["std"] }
+ark-std = { workspace = true, features = ["std"] }
+
+anyhow.workspace = true
+clap.workspace = true
+hex.workspace = true
+sha2.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+ark-ff = { workspace = true, features = ["std"] }

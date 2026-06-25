@@ -1,0 +1,64 @@
+# Off-chain workspace for the ZK "prove you know a secret" example on Vara.
+#
+# DEVIATION FROM BRIEF (documented in README.md §Architecture):
+# The brief asked for a single Cargo workspace containing every crate including
+# the on-chain Sails program (`verifier-app`). We deliberately KEEP THE SAILS
+# PROGRAM OUT of this workspace and give it its own isolated workspace under
+# `crates/verifier-app/`. Reason (per vara-skills `sails-new-app` guardrail):
+# a shared top-level workspace makes Cargo unify features and enable BOTH
+# `gstd` and `gtest` on `sails-rs` at once, which breaks the Wasm build.
+# `exclude` below enforces that isolation while preserving the brief's layout.
+
+[workspace]
+resolver = "2"
+members = [
+    "observability/telemetry",
+    "crates/circuit",
+    "crates/keys",
+    "crates/prover",
+    # added per step as they are built:
+    # "crates/client",
+]
+exclude = [
+    "crates/verifier-app",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT-0"
+
+# --- Pinned versions (see README.md §Pinned versions for provenance) ---
+# arkworks 0.5.x line: mutually-compatible, battle-tested, no_std-capable.
+# The in-circuit/native APIs we use are identical on 0.5 and 0.6; we pin 0.5
+# for ecosystem stability. Curve point encodings are standard-compliant and
+# byte-compatible with the on-chain `ark-scale` bridge regardless of line.
+[workspace.dependencies]
+ark-groth16          = { version = "0.5", default-features = false }
+ark-bls12-381        = { version = "0.5", default-features = false, features = ["curve"] }
+ark-ec               = { version = "0.5", default-features = false }
+ark-ff               = { version = "0.5", default-features = false }
+ark-relations        = { version = "0.5", default-features = false }
+ark-r1cs-std         = { version = "0.5", default-features = false }
+ark-crypto-primitives = { version = "0.5", default-features = false, features = ["crh", "sponge", "r1cs", "snark"] }
+ark-snark            = { version = "0.5", default-features = false }
+ark-serialize        = { version = "0.5", default-features = false }
+ark-std              = { version = "0.5", default-features = false }
+
+# Observability + tooling
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+uuid               = { version = "1", features = ["v4"] }
+serde              = { version = "1", features = ["derive"] }
+serde_json         = "1"
+anyhow             = "1"
+clap               = { version = "4", features = ["derive"] }
+hex                = "0.4"
+sha2               = "0.10"
+
+# Local crates
+zk-telemetry = { path = "observability/telemetry" }
+zk-circuit   = { path = "crates/circuit" }
+
+[profile.release]
+opt-level = 3

@@ -1,0 +1,93 @@
+:root {
+  /* surfaces */
+  --bg: #0a0b0e;
+  --bg-2: #0e1016;
+  --panel: #12141b;
+  --panel-2: #161922;
+  --line: #232733;
+  --line-2: #2d3342;
+
+  /* ink */
+  --text: #e7e5dc;
+  --dim: #888fa0;
+  --faint: #5b6270;
+
+  /* the zero-knowledge duality */
+  --witness: #8b7bf7; /* private — the secret */
+  --public: #45d6c8; /* public — what travels */
+
+  /* verdict */
+  --valid: #74e08b;
+  --reject: #e0533d;
+
+  --redact: #050507;
+
+  --maxw: 1120px;
+  --r: 4px;
+
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+
+  /* faint cryptographic grid + corner glow */
+  background-image:
+    radial-gradient(900px 500px at 85% -5%, rgba(69, 214, 200, 0.06), transparent 60%),
+    radial-gradient(700px 500px at 0% 0%, rgba(139, 123, 247, 0.06), transparent 55%),
+    linear-gradient(var(--bg-2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-2) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    52px 52px,
+    52px 52px;
+  background-position:
+    0 0,
+    0 0,
+    -1px -1px,
+    -1px -1px;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+a {
+  color: var(--public);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--public);
+  outline-offset: 2px;
+}

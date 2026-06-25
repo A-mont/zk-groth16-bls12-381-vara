@@ -1,0 +1,31 @@
+[package]
+name = "zk-prover"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Step 3 — off-chain Groth16 prover: takes secret w, emits (h, proof)."
+
+[[bin]]
+name = "zk-prove"
+path = "src/main.rs"
+
+[dependencies]
+zk-circuit.workspace = true
+zk-telemetry.workspace = true
+zk-keys = { path = "../keys" }
+
+ark-groth16.workspace = true
+ark-bls12-381.workspace = true
+ark-snark.workspace = true
+ark-serialize.workspace = true
+ark-std = { workspace = true, features = ["std"] }
+# Direct rand dep (same 0.8 line ark-std re-exports) to enable OS entropy
+# (StdRng::from_entropy) for non-deterministic proving.
+rand = "0.8"
+
+anyhow.workspace = true
+clap.workspace = true
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true

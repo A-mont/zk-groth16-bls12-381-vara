@@ -1,0 +1,52 @@
+# Step 4 — on-chain Sails verifier program (ISOLATED workspace).
+#
+# This is intentionally its OWN workspace (the outer off-chain Cargo.toml
+# `exclude`s it). Mixing a Sails/gstd program into a shared workspace makes Cargo
+# unify features and turn on `gstd` + `gtest` on `sails-rs` simultaneously, which
+# breaks the Wasm build. See vara-skills `sails-new-app` guardrail.
+[package]
+name = "zk-verifier"
+version = "0.1.0"
+edition = "2021"
+license = "MIT-0"
+
+[workspace]
+resolver = "2"
+members = ["app", "client"]
+# "driver" (Step 5 gclient e2e) added once the program compiles.
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT-0"
+
+[workspace.dependencies]
+gstd = "1.10.0"
+sails-rs = "0.10.2"
+sails-client-gen = "0.10.2"
+sails-idl-gen = "0.10.2"
+tokio = { version = "1.41", features = ["rt", "macros"] }
+
+[dependencies]
+zk-verifier-client = { path = "client", optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+zk-verifier-app = { path = "app" }
+
+[build-dependencies]
+zk-verifier-app = { path = "app" }
+sails-rs = { version = "0.10.2", features = ["wasm-builder"] }
+sails-idl-gen.workspace = true
+sails-client-gen.workspace = true
+
+[dev-dependencies]
+zk-verifier = { path = ".", features = ["wasm-binary", "zk-verifier-client"] }
+sails-rs = { version = "0.10.2", features = ["gtest"] }
+tokio.workspace = true
+serde_json = "1"
+hex = "0.4"
+
+[features]
+wasm-binary = []
+std = []
+zk-verifier-client = ["dep:zk-verifier-client"]

@@ -1,0 +1,16 @@
+/target
+**/target
+Cargo.lock
+.binpath
+
+# artifacts/: ignore generated keys/proofs/binaries (pk.bin, vk*, proof*, *.json
+# outputs), but KEEP the scripts and the (public) deploy args that
+# deploy.sh / verify.sh / check-no-leak.sh need on a fresh clone.
+/artifacts/*
+!/artifacts/.gitkeep
+!/artifacts/*.sh
+!/artifacts/deploy_args.json
+
+# runs/: ignore generated run logs, keep the directory
+/runs/*
+!/runs/.gitkeep

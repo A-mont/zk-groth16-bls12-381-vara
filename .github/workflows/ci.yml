@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Off-chain workspace: circuit / keys / prover / telemetry ──────────────
+  offchain:
+    name: Off-chain (cargo test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust 1.91
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.91"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test
+        run: cargo test --workspace
+
+  # ── On-chain Sails verifier (isolated workspace, compiles to Wasm) ─────────
+  verifier:
+    name: Verifier (build Wasm + gtest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates/verifier-app
+    steps:
+      - uses: actions/checkout@v4
+
+      # Honours crates/verifier-app/rust-toolchain.toml (1.91 + wasm32v1-none).
+      - name: Install Rust 1.91 + wasm32v1-none
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.91"
+          targets: wasm32v1-none
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates/verifier-app
+
+      - name: Build (release Wasm + IDL/client)
+        run: cargo build --release
+
+      - name: Test (gtest against the BLS12-381 builtin mock)
+        run: cargo test --release
+
+  # ── Frontend (Vite + sails-js) ────────────────────────────────────────────
+  frontend:
+    name: Frontend (build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install deps
+        run: npm install --legacy-peer-deps
+
+      - name: Provide env (build reads VITE_* vars)
+        run: cp .env.example .env
+
+      - name: Build (tsc -b + vite build)
+        run: npm run build

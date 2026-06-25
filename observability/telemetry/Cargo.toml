@@ -1,0 +1,13 @@
+[package]
+name = "zk-telemetry"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Shared observability layer (tracing init, StepReport, run-log writer) for the ZK-on-Vara example."
+
+[dependencies]
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+serde.workspace = true
+serde_json.workspace = true

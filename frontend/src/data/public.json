@@ -1,0 +1,7 @@
+{
+  "trace_id": "9fbe6b52-1d7f-47e5-97f9-cae302e53dd0",
+  "h_hex": "9ce13365e6167384fab00e208169adb906556264717d19d9a90891bacab37e4b",
+  "vk_fingerprint": "8a3ce137e34c5b43f52c977a68be8f27b929300071dc6fe7d33479e188ed1b72",
+  "curve": "BLS12-381",
+  "hash": "Poseidon(BLS12-381::Fr, w=3, alpha=5, RF=8, RP=57)"
+}

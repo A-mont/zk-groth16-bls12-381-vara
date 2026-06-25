@@ -1,0 +1,47 @@
+[package]
+name = "zk-circuit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Step 1 — the R1CS relation hash(w) == h (Poseidon over BLS12-381 Fr)."
+
+# `stats` CLI: emits the Step 1 observability signals (num_constraints, etc.) as
+# a StepReport. Std-only, so it never compromises the no_std lib build below.
+[[bin]]
+name = "zk-circuit"
+path = "src/main.rs"
+required-features = ["std"]
+
+[dependencies]
+ark-bls12-381.workspace = true
+ark-ff.workspace = true
+ark-relations.workspace = true
+ark-r1cs-std.workspace = true
+ark-crypto-primitives.workspace = true
+ark-serialize.workspace = true
+ark-std.workspace = true
+
+# CLI/observability deps for the `zk-circuit stats` binary. Optional + behind the
+# `std` feature so `--no-default-features` (no_std) keeps the lib clean.
+zk-telemetry = { workspace = true, optional = true }
+anyhow = { workspace = true, optional = true }
+clap = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
+
+[features]
+# Kept no_std-friendly so the same relation can later be reused on-chain if a
+# fallback in-actor synthesis path is ever wanted. v1 only uses it off-chain.
+default = ["std"]
+std = [
+    "ark-bls12-381/std",
+    "ark-ff/std",
+    "ark-relations/std",
+    "ark-r1cs-std/std",
+    "ark-crypto-primitives/std",
+    "ark-serialize/std",
+    "ark-std/std",
+    "dep:zk-telemetry",
+    "dep:anyhow",
+    "dep:clap",
+    "dep:tracing",
+]
